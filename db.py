@@ -19,6 +19,7 @@ def conn():
 
 def init_db():
     config.DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+
     with conn() as c:
         c.executescript(
             """
@@ -26,14 +27,41 @@ def init_db():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 ts TEXT, question TEXT, standalone_question TEXT, answer TEXT,
                 top_score REAL, answered INTEGER, sources TEXT,
-                feedback INTEGER            -- 1 = thumbs up, -1 = thumbs down, NULL = none
+                feedback INTEGER
             );
+
             CREATE TABLE IF NOT EXISTS tickets (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                ts TEXT, question TEXT, status TEXT DEFAULT 'open', log_id INTEGER
+                ts TEXT,
+                question TEXT,
+                status TEXT DEFAULT 'open',
+                log_id INTEGER,
+                category TEXT DEFAULT 'Other',
+                priority TEXT DEFAULT 'Medium',
+                summary TEXT DEFAULT '',
+                department TEXT DEFAULT 'General Administration'
             );
             """
         )
+
+        # Safely add new columns to existing databases.
+        existing = {
+            row[1]
+            for row in c.execute("PRAGMA table_info(tickets)").fetchall()
+        }
+
+        migrations = {
+            "category": "TEXT DEFAULT 'Other'",
+            "priority": "TEXT DEFAULT 'Medium'",
+            "summary": "TEXT DEFAULT ''",
+            "department": "TEXT DEFAULT 'General Administration'",
+        }
+
+        for column, definition in migrations.items():
+            if column not in existing:
+                c.execute(
+                    f"ALTER TABLE tickets ADD COLUMN {column} {definition}"
+                )
 
 
 def _now():
@@ -50,12 +78,36 @@ def log_chat(question, standalone, answer, top_score, answered, sources):
         return cur.lastrowid
 
 
-def create_ticket(question, log_id):
+
+def create_ticket(
+    question,
+    log_id,
+    category="Other",
+    priority="Medium",
+    summary="",
+    department="General Administration"
+):
     with conn() as c:
         cur = c.execute(
-            "INSERT INTO tickets (ts, question, log_id) VALUES (?,?,?)", (_now(), question, log_id)
+            """
+            INSERT INTO tickets (
+                ts, question, log_id, category,
+                priority, summary, department
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                _now(),
+                question,
+                log_id,
+                category,
+                priority,
+                summary,
+                department
+            )
         )
         return cur.lastrowid
+
 
 
 def save_feedback(log_id, value):
