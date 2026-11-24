@@ -1,0 +1,74 @@
+{
+  "_info": "Test set for the GIT Helpdesk RAG project. 'answerable': false means the documents do NOT contain the answer, so the bot should refuse and create a ticket. 'page' is the 1-based PDF page where the answer is found.",
+  "questions": [
+    {"id": 1, "type": "factual", "question": "What is the last date to apply for admission in 2027?", "expected_answer": "30 June 2027", "source_file": "01_Admission_Guide.pdf", "page": 2, "answerable": true},
+    {"id": 2, "type": "factual", "question": "How many seats are there in B.Tech Computer Science?", "expected_answer": "120 seats", "source_file": "01_Admission_Guide.pdf", "page": 1, "answerable": true},
+    {"id": 3, "type": "factual", "question": "What is the minimum percentage needed in 12th for B.Tech admission?", "expected_answer": "50% aggregate (45% for reserved category), with Physics and Mathematics compulsory", "source_file": "01_Admission_Guide.pdf", "page": 1, "answerable": true},
+    {"id": 4, "type": "list", "question": "What documents do I need to bring at the time of admission?", "expected_answer": "Class 10 and Class 12 marksheets, entrance scorecard, transfer certificate, migration certificate, Aadhaar card, category certificate (if applicable), six passport photos, medical fitness certificate, anti-ragging affidavit", "source_file": "01_Admission_Guide.pdf", "page": 2, "answerable": true},
+    {"id": 5, "type": "factual", "question": "What is the application fee for a reserved category candidate?", "expected_answer": "Rs. 500", "source_file": "01_Admission_Guide.pdf", "page": 2, "answerable": true},
+    {"id": 6, "type": "factual", "question": "When will the merit list be published?", "expected_answer": "15 July 2027", "source_file": "01_Admission_Guide.pdf", "page": 2, "answerable": true},
+    {"id": 7, "type": "reasoning", "question": "If I withdraw my admission on 10 August 2027, how much refund will I get?", "expected_answer": "50% of the fees paid (withdrawal between 1 and 15 August)", "source_file": "01_Admission_Guide.pdf", "page": 3, "answerable": true},
+    {"id": 8, "type": "factual", "question": "Can diploma holders get lateral entry into B.Tech?", "expected_answer": "Yes, into the second year, with at least 55% aggregate in the diploma", "source_file": "01_Admission_Guide.pdf", "page": 1, "answerable": true},
+
+    {"id": 9, "type": "numeric", "question": "What is the total yearly fee for B.Tech CSE?", "expected_answer": "Rs. 1,60,000 (tuition 1,45,000 + development 10,000 + exam 5,000)", "source_file": "02_Fee_Structure.pdf", "page": 1, "answerable": true},
+    {"id": 10, "type": "numeric", "question": "What is the total yearly fee for MBA?", "expected_answer": "Rs. 1,76,000", "source_file": "02_Fee_Structure.pdf", "page": 1, "answerable": true},
+    {"id": 11, "type": "factual", "question": "How much is the caution money and is it refundable?", "expected_answer": "Rs. 5,000, refundable after course completion", "source_file": "02_Fee_Structure.pdf", "page": 1, "answerable": true},
+    {"id": 12, "type": "factual", "question": "How is the fee paid in installments?", "expected_answer": "60% at admission and 40% by 31 December", "source_file": "02_Fee_Structure.pdf", "page": 2, "answerable": true},
+    {"id": 13, "type": "numeric", "question": "What is the late fee for paying after the due date?", "expected_answer": "Rs. 100 per day, capped at Rs. 3,000", "source_file": "02_Fee_Structure.pdf", "page": 2, "answerable": true},
+    {"id": 14, "type": "factual", "question": "Can I pay my fees in cash at the counter?", "expected_answer": "No, cash is not accepted. Pay online, by demand draft or by NEFT", "source_file": "02_Fee_Structure.pdf", "page": 2, "answerable": true},
+    {"id": 15, "type": "reasoning", "question": "I scored 96% in class 12. What scholarship can I get?", "expected_answer": "50% tuition fee waiver, renewable if CGPA is at least 7.5 and attendance at least 75%", "source_file": "02_Fee_Structure.pdf", "page": 2, "answerable": true},
+    {"id": 16, "type": "multi-chunk", "question": "How much will a hostel student in a double-sharing room pay for hostel and mess per year?", "expected_answer": "Rs. 80,000 (double room) + Rs. 36,000 (mess) = Rs. 1,16,000", "source_file": "02_Fee_Structure.pdf", "page": 1, "answerable": true},
+
+    {"id": 17, "type": "factual", "question": "What is the curfew time in the girls hostel?", "expected_answer": "8:30 PM (Kalpana Hostel)", "source_file": "03_Hostel_Rules.pdf", "page": 1, "answerable": true},
+    {"id": 18, "type": "factual", "question": "When are visitors allowed in the hostel?", "expected_answer": "Sundays, 10:00 AM to 5:00 PM, in the visitor lounge only", "source_file": "03_Hostel_Rules.pdf", "page": 1, "answerable": true},
+    {"id": 19, "type": "factual", "question": "What is the fine for having alcohol in the hostel?", "expected_answer": "Rs. 10,000 fine and suspension from the hostel for one semester", "source_file": "03_Hostel_Rules.pdf", "page": 2, "answerable": true},
+    {"id": 20, "type": "factual", "question": "Can I keep an induction cooktop or kettle in my room?", "expected_answer": "No, cooking appliances, kettles and heaters are not allowed. Unauthorised appliances attract a Rs. 2,000 fine", "source_file": "03_Hostel_Rules.pdf", "page": 2, "answerable": true},
+    {"id": 21, "type": "factual", "question": "Do I get a mess rebate if I go home for a week?", "expected_answer": "Yes, Rs. 150 per day if absent for 5 or more consecutive days with prior written notice to the warden", "source_file": "03_Hostel_Rules.pdf", "page": 2, "answerable": true},
+    {"id": 22, "type": "factual", "question": "What are the mess timings for dinner?", "expected_answer": "7:30 PM to 9:00 PM", "source_file": "03_Hostel_Rules.pdf", "page": 1, "answerable": true},
+
+    {"id": 23, "type": "factual", "question": "What is the minimum attendance needed to sit in exams?", "expected_answer": "75% in each subject (80% for lab courses)", "source_file": "05_Attendance_and_Leave_Policy.pdf", "page": 1, "answerable": true},
+    {"id": 24, "type": "reasoning", "question": "My attendance is 70%. Can I still appear for the exam?", "expected_answer": "Possibly, by applying for condonation (65% to 74%) with a valid reason or medical certificate, fee Rs. 500 per subject", "source_file": "05_Attendance_and_Leave_Policy.pdf", "page": 1, "answerable": true},
+    {"id": 25, "type": "factual", "question": "What marks do I need to pass a subject?", "expected_answer": "At least 40% overall and at least 35% in the end-semester exam", "source_file": "04_Examination_Rules.pdf", "page": 1, "answerable": true},
+    {"id": 26, "type": "factual", "question": "How many days do I have to apply for revaluation and what does it cost?", "expected_answer": "Within 7 days of result declaration, Rs. 1,000 per paper", "source_file": "04_Examination_Rules.pdf", "page": 2, "answerable": true},
+    {"id": 27, "type": "factual", "question": "What happens if I am caught cheating for the first time?", "expected_answer": "Zero marks in that paper", "source_file": "04_Examination_Rules.pdf", "page": 2, "answerable": true},
+    {"id": 28, "type": "factual", "question": "How many backlogs are allowed to be promoted to the next year?", "expected_answer": "A student with more than 4 backlogs cannot be promoted, so up to 4 are allowed", "source_file": "04_Examination_Rules.pdf", "page": 2, "answerable": true},
+    {"id": 29, "type": "factual", "question": "How many books can an undergraduate student borrow from the library?", "expected_answer": "3 books for 14 days", "source_file": "06_Library_and_Campus_Rules.pdf", "page": 1, "answerable": true},
+    {"id": 30, "type": "factual", "question": "What is the library fine for late return?", "expected_answer": "Rs. 2 per day per book", "source_file": "06_Library_and_Campus_Rules.pdf", "page": 1, "answerable": true},
+    {"id": 31, "type": "factual", "question": "What is the minimum percentage required to sit for campus placements?", "expected_answer": "60% aggregate with no active backlogs", "source_file": "06_Library_and_Campus_Rules.pdf", "page": 2, "answerable": true},
+    {"id": 32, "type": "factual", "question": "Where is the grievance cell and how long does it take to respond?", "expected_answer": "Room 105, Administration Block; complaints answered within 7 working days", "source_file": "06_Library_and_Campus_Rules.pdf", "page": 2, "answerable": true},
+
+    {"id": 33, "type": "unanswerable", "question": "What is the highest placement package offered last year?", "expected_answer": "NOT IN DOCUMENTS - bot should refuse and create a ticket", "source_file": null, "page": null, "answerable": false},
+    {"id": 34, "type": "unanswerable", "question": "Who is the principal of the college?", "expected_answer": "NOT IN DOCUMENTS - bot should refuse and create a ticket", "source_file": null, "page": null, "answerable": false},
+    {"id": 35, "type": "unanswerable", "question": "Does the college offer an M.Tech program?", "expected_answer": "NOT IN DOCUMENTS - only B.Tech, MBA and BCA are listed. Bot should refuse rather than guess", "source_file": null, "page": null, "answerable": false},
+    {"id": 36, "type": "unanswerable", "question": "What is the fee for the Ph.D. program?", "expected_answer": "NOT IN DOCUMENTS - bot should refuse and create a ticket", "source_file": null, "page": null, "answerable": false},
+    {"id": 37, "type": "unanswerable", "question": "Is there a swimming pool on campus?", "expected_answer": "NOT IN DOCUMENTS - bot should refuse and create a ticket", "source_file": null, "page": null, "answerable": false},
+    {"id": 38, "type": "unanswerable", "question": "What is the capital of France?", "expected_answer": "OUT OF SCOPE - bot should not answer from general knowledge", "source_file": null, "page": null, "answerable": false},
+    {"id": 39, "type": "unanswerable", "question": "What is the Wi-Fi password of the library?", "expected_answer": "NOT IN DOCUMENTS - bot should refuse and must not invent a password", "source_file": null, "page": null, "answerable": false}
+  ],
+
+  "conversation_tests": [
+    {
+      "name": "Follow-up on fees (tests query rewriting with memory)",
+      "turns": [
+        {"user": "What is the yearly fee for B.Tech CSE?", "expected": "Rs. 1,60,000 total per year"},
+        {"user": "And for ECE?", "expected": "Rs. 1,45,000 total per year"},
+        {"user": "Which one is cheaper?", "expected": "ECE is cheaper by Rs. 15,000"}
+      ]
+    },
+    {
+      "name": "Follow-up on hostel (tests pronoun and context handling)",
+      "turns": [
+        {"user": "What is the hostel curfew?", "expected": "8:30 PM for girls (Kalpana), 10:00 PM for boys (Aryabhatta)"},
+        {"user": "What if I come late?", "expected": "Needs prior written permission from the warden; three late entries in a month means parents are informed"},
+        {"user": "Can my parents visit me in my room?", "expected": "No, visitors only on Sundays 10 AM to 5 PM in the visitor lounge"}
+      ]
+    },
+    {
+      "name": "Follow-up then unanswerable (tests fallback mid-conversation)",
+      "turns": [
+        {"user": "How many books can I borrow?", "expected": "UG: 3 books for 14 days, PG: 5 books for 21 days"},
+        {"user": "Can I borrow e-books too?", "expected": "NOT IN DOCUMENTS - should refuse and create a ticket"}
+      ]
+    }
+  ]
+}
