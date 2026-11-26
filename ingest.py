@@ -1,3 +1,4 @@
+
 """Parse documents -> chunk -> embed -> store in ChromaDB.
 
 Run from the project folder:
@@ -5,14 +6,9 @@ Run from the project folder:
     python ingest.py --reset    # wipe the vector DB first, then ingest
 """
 import argparse
-from functools import lru_cache
-from pathlib import Path
-
-import argparse
 import re
 from functools import lru_cache
 from pathlib import Path
-
 
 import chromadb
 import docx
@@ -25,7 +21,6 @@ import config
 SUPPORTED = {".pdf", ".docx", ".txt"}
 
 
-
 @lru_cache(maxsize=1)
 def get_collection():
     """One shared Chroma collection (the embedding model loads only once)."""
@@ -35,7 +30,7 @@ def get_collection():
     return client.get_or_create_collection(
         name=config.COLLECTION,
         embedding_function=embed_fn,
-        metadata={"hnsw:space": "cosine"},  # so score = 1 - distance is a cosine similarity
+        metadata={"hnsw:space": "cosine"},
     )
 
 
@@ -56,35 +51,61 @@ def load_pages(path: Path):
         return [(1, path.read_text(encoding="utf-8", errors="ignore"))]
     raise ValueError(f"Unsupported file type: {ext}")
 
+
 def doc_title(path: Path) -> str:
     """'02_Fee_Structure.pdf' -> 'Fee Structure'"""
     return re.sub(r"^\d+_", "", path.stem).replace("_", " ")
 
+
 def ingest_file(path) -> int:
-    """Ingest one file. Re-ingesting the same file replaces its old chunks. Returns #chunks."""
+    """Ingest one file. Re-ingesting the same file replaces its old chunks."""
     path = Path(path)
     if path.suffix.lower() not in SUPPORTED:
-        raise ValueError(f"Unsupported file type: {path.suffix} (use PDF, DOCX or TXT)")
+        raise ValueError(
+            f"Unsupported file type: {path.suffix} (use PDF, DOCX or TXT)"
+        )
 
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=config.CHUNK_SIZE, chunk_overlap=config.CHUNK_OVERLAP
+        chunk_size=config.CHUNK_SIZE,
+        chunk_overlap=config.CHUNK_OVERLAP,
     )
+
     ids, docs, metas = [], [], []
+
     for page_no, text in load_pages(path):
         if not text.strip():
-            continue  # blank or scanned page (would need OCR)
+            continue
+
         for i, chunk in enumerate(splitter.split_text(text)):
             ids.append(f"{path.name}-p{page_no}-c{i}")
             docs.append(f"{doc_title(path)}\n{chunk}")
             metas.append({"source": path.name, "page": page_no})
 
     if not docs:
-        raise ValueError(f"No readable text found in {path.name} (scanned PDF?).")
+        raise ValueError(
+            f"No readable text found in {path.name} (scanned PDF?)."
+        )
 
     col = get_collection()
-    col.delete(where={"source": path.name})          # avoid duplicates on re-ingest
+    col.delete(where={"source": path.name})
     col.add(ids=ids, documents=docs, metadatas=metas)
+
     return len(docs)
+
+
+def ingest_folder(folder=None) -> int:
+    """Ingest every supported file in a folder."""
+    folder = Path(folder or config.RAW_DIR)
+    total = 0
+
+    for f in sorted(folder.glob("*")):
+        if f.suffix.lower() in SUPPORTED:
+            try:
+                total += ingest_file(f)
+            except Exception as e:
+                print(f"  SKIP {f.name}: {e}")
+
+    return total
 
 
 def list_sources():
@@ -94,7 +115,11 @@ def list_sources():
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--reset", action="store_true", help="delete all existing chunks first")
+    ap.add_argument(
+        "--reset",
+        action="store_true",
+        help="delete all existing chunks first",
+    )
     args = ap.parse_args()
 
     if args.reset:
@@ -104,13 +129,20 @@ def main():
             print("Vector DB cleared.")
         except Exception:
             pass
+
         get_collection.cache_clear()
 
-    files = [f for f in sorted(config.RAW_DIR.glob("*")) if f.suffix.lower() in SUPPORTED]
+    files = [
+        f for f in sorted(config.RAW_DIR.glob("*"))
+        if f.suffix.lower() in SUPPORTED
+    ]
+
     if not files:
         print(f"No documents found in {config.RAW_DIR}")
         return
+
     total = 0
+
     for f in files:
         try:
             n = ingest_file(f)
@@ -118,6 +150,7 @@ def main():
             print(f"  OK  {f.name}: {n} chunks")
         except Exception as e:
             print(f"  SKIP {f.name}: {e}")
+
     print(f"Done. {total} chunks stored in {config.CHROMA_DIR}")
 
 

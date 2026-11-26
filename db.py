@@ -1,4 +1,6 @@
+
 """SQLite helpers: chat logs, tickets, feedback, admin stats."""
+
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime
@@ -10,6 +12,7 @@ import config
 def conn():
     c = sqlite3.connect(config.DB_PATH)
     c.row_factory = sqlite3.Row
+
     try:
         yield c
         c.commit()
@@ -25,8 +28,13 @@ def init_db():
             """
             CREATE TABLE IF NOT EXISTS chat_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                ts TEXT, question TEXT, standalone_question TEXT, answer TEXT,
-                top_score REAL, answered INTEGER, sources TEXT,
+                ts TEXT,
+                question TEXT,
+                standalone_question TEXT,
+                answer TEXT,
+                top_score REAL,
+                answered INTEGER,
+                sources TEXT,
                 feedback INTEGER
             );
 
@@ -71,12 +79,25 @@ def _now():
 def log_chat(question, standalone, answer, top_score, answered, sources):
     with conn() as c:
         cur = c.execute(
-            "INSERT INTO chat_logs (ts, question, standalone_question, answer, top_score, answered, sources)"
-            " VALUES (?,?,?,?,?,?,?)",
-            (_now(), question, standalone, answer, top_score, int(answered), sources),
+            """
+            INSERT INTO chat_logs (
+                ts, question, standalone_question, answer,
+                top_score, answered, sources
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                _now(),
+                question,
+                standalone,
+                answer,
+                top_score,
+                int(answered),
+                sources,
+            ),
         )
-        return cur.lastrowid
 
+        return cur.lastrowid
 
 
 def create_ticket(
@@ -85,7 +106,7 @@ def create_ticket(
     category="Other",
     priority="Medium",
     summary="",
-    department="General Administration"
+    department="General Administration",
 ):
     with conn() as c:
         cur = c.execute(
@@ -103,65 +124,112 @@ def create_ticket(
                 category,
                 priority,
                 summary,
-                department
-            )
+                department,
+            ),
         )
-        return cur.lastrowid
 
+        return cur.lastrowid
 
 
 def save_feedback(log_id, value):
     with conn() as c:
-        c.execute("UPDATE chat_logs SET feedback=? WHERE id=?", (value, log_id))
+        c.execute(
+            "UPDATE chat_logs SET feedback=? WHERE id=?",
+            (value, log_id),
+        )
 
 
 def resolve_ticket(ticket_id):
     with conn() as c:
-        c.execute("UPDATE tickets SET status='resolved' WHERE id=?", (ticket_id,))
+        c.execute(
+            "UPDATE tickets SET status='resolved' WHERE id=?",
+            (ticket_id,),
+        )
 
 
 def get_tickets(status=None):
     with conn() as c:
         if status:
-            rows = c.execute("SELECT * FROM tickets WHERE status=? ORDER BY id DESC", (status,)).fetchall()
+            rows = c.execute(
+                """
+                SELECT * FROM tickets
+                WHERE status=?
+                ORDER BY id DESC
+                """,
+                (status,),
+            ).fetchall()
         else:
-            rows = c.execute("SELECT * FROM tickets ORDER BY id DESC").fetchall()
-    return [dict(r) for r in rows]
+            rows = c.execute(
+                "SELECT * FROM tickets ORDER BY id DESC"
+            ).fetchall()
+
+    return [dict(row) for row in rows]
 
 
 def top_questions(limit=10):
     with conn() as c:
         rows = c.execute(
-            "SELECT standalone_question AS question, COUNT(*) AS times FROM chat_logs "
-            "GROUP BY LOWER(standalone_question) ORDER BY times DESC LIMIT ?",
+            """
+            SELECT
+                standalone_question AS question,
+                COUNT(*) AS times
+            FROM chat_logs
+            GROUP BY LOWER(standalone_question)
+            ORDER BY times DESC
+            LIMIT ?
+            """,
             (limit,),
         ).fetchall()
-    return [dict(r) for r in rows]
+
+    return [dict(row) for row in rows]
 
 
 def disliked_answers(limit=20):
     with conn() as c:
         rows = c.execute(
-            "SELECT ts, question, answer FROM chat_logs WHERE feedback=-1 ORDER BY id DESC LIMIT ?",
+            """
+            SELECT ts, question, answer
+            FROM chat_logs
+            WHERE feedback=-1
+            ORDER BY id DESC
+            LIMIT ?
+            """,
             (limit,),
         ).fetchall()
-    return [dict(r) for r in rows]
+
+    return [dict(row) for row in rows]
 
 
 def stats():
     with conn() as c:
-        q = lambda sql: c.execute(sql).fetchone()[0]
-        total = q("SELECT COUNT(*) FROM chat_logs")
-        answered = q("SELECT COUNT(*) FROM chat_logs WHERE answered=1")
-        up = q("SELECT COUNT(*) FROM chat_logs WHERE feedback=1")
-        down = q("SELECT COUNT(*) FROM chat_logs WHERE feedback=-1")
-        open_t = q("SELECT COUNT(*) FROM tickets WHERE status='open'")
+        def count(sql):
+            return c.execute(sql).fetchone()[0]
+
+        total = count("SELECT COUNT(*) FROM chat_logs")
+        answered = count(
+            "SELECT COUNT(*) FROM chat_logs WHERE answered=1"
+        )
+        up = count(
+            "SELECT COUNT(*) FROM chat_logs WHERE feedback=1"
+        )
+        down = count(
+            "SELECT COUNT(*) FROM chat_logs WHERE feedback=-1"
+        )
+        open_tickets = count(
+            "SELECT COUNT(*) FROM tickets WHERE status='open'"
+        )
+
     rated = up + down
+
     return {
         "total": total,
         "answered": answered,
-        "answer_rate": (answered / total * 100) if total else 0,
-        "open_tickets": open_t,
-        "satisfaction": (up / rated * 100) if rated else None,
+        "answer_rate": (
+            answered / total * 100 if total else 0
+        ),
+        "open_tickets": open_tickets,
+        "satisfaction": (
+            up / rated * 100 if rated else None
+        ),
         "rated": rated,
     }

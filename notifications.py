@@ -1,10 +1,13 @@
 
-import os
+"""Send email notifications when a new helpdesk ticket is created."""
+
+import logging
 import smtplib
 from email.message import EmailMessage
-from dotenv import load_dotenv
 
-load_dotenv()
+import config
+
+log = logging.getLogger("helpdesk.notifications")
 
 
 def send_ticket_notification(
@@ -15,12 +18,12 @@ def send_ticket_notification(
     summary,
     department
 ):
-    sender = os.getenv("SMTP_EMAIL")
-    app_password = os.getenv("SMTP_APP_PASSWORD")
-    admin_email = os.getenv("ADMIN_EMAIL")
+    sender = config.get_setting("SMTP_EMAIL")
+    app_password = config.get_setting("SMTP_APP_PASSWORD")
+    admin_email = config.get_setting("ADMIN_EMAIL")
 
     if not all([sender, app_password, admin_email]):
-        print("Email notification skipped: SMTP settings are missing.")
+        log.info("Email notification skipped: SMTP settings are missing.")
         return False
 
     message = EmailMessage()
@@ -46,19 +49,18 @@ Status: Open
 
 Please review this ticket in the Helpdesk Admin Dashboard.
 
-Greenfield Institute of Technology
 AI Helpdesk Assistant
 """)
 
     try:
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=20) as server:
             server.starttls()
             server.login(sender, app_password.replace(" ", ""))
             server.send_message(message)
 
-        print(f"Notification sent for ticket #{ticket_id}.")
+        log.info("Notification sent for ticket #%s.", ticket_id)
         return True
 
-    except Exception as error:
-        print(f"Email notification failed: {error}")
+    except Exception:
+        log.exception("Email notification failed for ticket #%s.", ticket_id)
         return False
